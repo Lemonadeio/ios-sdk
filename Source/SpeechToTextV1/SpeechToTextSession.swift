@@ -176,8 +176,8 @@ public class SpeechToTextSession {
      
      - parameter audio: The audio data to transcribe.
      */
-    public func recognize(audio: NSData) {
-        socket.writeAudio(audio)
+    public func recognize(audio: NSData, writeCompletion: (Void -> Void)? = nil) {
+        socket.writeAudio(audio, completion: writeCompletion)
     }
     
     /**

@@ -121,10 +121,10 @@ internal class SpeechToTextSocket {
         }
     }
     
-    internal func writeAudio(audio: NSData) {
+    internal func writeAudio(audio: NSData, completion: (Void -> Void)? = nil) {
         guard state != .Disconnected else { return }
         queue.addOperationWithBlock {
-            self.socket.writeData(audio)
+            self.socket.writeData(audio, completion: completion)
             if self.state == .Listening {
                 self.state = .SentAudio
             }
