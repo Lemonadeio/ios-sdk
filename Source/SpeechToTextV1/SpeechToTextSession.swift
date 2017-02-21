@@ -68,6 +68,12 @@ public class SpeechToTextSession {
         get { return socket.onResults }
         set { socket.onResults = newValue }
     }
+
+    /// Invoked when transcription service state changes to "listening".
+    public var onListening: (Void -> Void)? {
+        get { return socket.onListening }
+        set { socket.onListening = newValue }
+    }
     
     /// Invoked when an error or warning occurs.
     public var onError: (NSError -> Void)? {
