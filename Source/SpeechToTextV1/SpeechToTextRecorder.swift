@@ -49,10 +49,12 @@ internal class SpeechToTextRecorder {
         if (numPackets == 0 && audioRecorder.format.mBytesPerPacket != 0) {
             numPackets = buffer.mAudioDataByteSize / audioRecorder.format.mBytesPerPacket
         }
-        
-        // execute callback with audio data
-        let pcm = NSData(bytes: buffer.mAudioData, length: Int(buffer.mAudioDataByteSize))
-        autoreleasepool {
+
+        // work with pcm data in an Autorelease Pool to make sure it is released in a timely manner
+        autoreleasepool { _ in
+
+            // execute callback with audio data
+            let pcm = NSData(bytes: buffer.mAudioData, length: Int(buffer.mAudioDataByteSize))
             audioRecorder.onMicrophoneData?(pcm)
         }
 
