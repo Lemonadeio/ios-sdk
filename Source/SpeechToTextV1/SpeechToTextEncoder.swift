@@ -17,7 +17,7 @@
 import Foundation
 import AudioToolbox
 
-internal class SpeechToTextEncoder {
+public class SpeechToTextEncoder {
     
     // This implementation uses the libopus and libogg libraries to encode and encapsulate audio.
     // For more information about these libraries, refer to their online documentation.
@@ -36,7 +36,7 @@ internal class SpeechToTextEncoder {
     private var pcmCache = Data()          // cache for pcm audio that is too short to encode
     private var oggCache = Data()          // cache for ogg stream
     
-    convenience init(format: AudioStreamBasicDescription, opusRate: Int32, application: Application) throws {
+    public convenience init(format: AudioStreamBasicDescription, opusRate: Int32, application: Application) throws {
         try self.init(
             pcmRate: Int32(format.mSampleRate),
             pcmChannels: Int32(format.mChannelsPerFrame),
@@ -46,7 +46,7 @@ internal class SpeechToTextEncoder {
         )
     }
     
-    init(pcmRate: Int32, pcmChannels: Int32, pcmBytesPerFrame: UInt32, opusRate: Int32, application: Application) throws {
+    public init(pcmRate: Int32, pcmChannels: Int32, pcmBytesPerFrame: UInt32, opusRate: Int32, application: Application) throws {
         // avoid resampling
         guard pcmRate == opusRate else {
             print("Resampling is not supported. Please ensure that the PCM and Opus sample rates match.")
@@ -155,12 +155,12 @@ internal class SpeechToTextEncoder {
         assemblePages(flush: true)
     }
     
-    internal func encode(pcm: AudioQueueBuffer) throws {
+    public func encode(pcm: AudioQueueBuffer) throws {
         let pcmData = pcm.mAudioData.assumingMemoryBound(to: Int16.self)
         try encode(pcm: pcmData, count: Int(pcm.mAudioDataByteSize))
     }
     
-    internal func encode(pcm: Data) throws {
+    public func encode(pcm: Data) throws {
         try pcm.withUnsafeBytes { (bytes: UnsafePointer<Int16>) in
             try encode(pcm: bytes, count: pcm.count)
         }
@@ -272,14 +272,14 @@ internal class SpeechToTextEncoder {
         pcmCache = Data()
     }
     
-    internal func bitstream(flush: Bool = false, fillBytes: Int32? = nil) -> Data {
+    public func bitstream(flush: Bool = false, fillBytes: Int32? = nil) -> Data {
         assemblePages(flush: flush, fillBytes: fillBytes)
         let bitstream = oggCache
         oggCache = Data()
         return bitstream
     }
     
-    internal func endstream(fillBytes: Int32? = nil) throws -> Data {
+    public func endstream(fillBytes: Int32? = nil) throws -> Data {
         // compute granule position using cache
         let pcmFrames = pcmCache.count / Int(pcmBytesPerFrame)
         granulePosition += Int64(pcmFrames * 48000 / Int(opusRate))
@@ -433,7 +433,7 @@ fileprivate enum ChannelMappingFamily: UInt8 {
 }
 
 // MARK: - Application
-internal enum Application {
+public enum Application {
     case voip
     case audio
     case lowDelay
@@ -457,7 +457,7 @@ internal enum Application {
 }
 
 // MARK: - OpusError
-internal enum OpusError: Error {
+public enum OpusError: Error {
     case ok
     case badArgument
     case bufferTooSmall
@@ -496,7 +496,7 @@ internal enum OpusError: Error {
 }
 
 // MARK: - OggError
-internal enum OggError: Error {
+public enum OggError: Error {
     case outOfSync
     case internalError
 }
