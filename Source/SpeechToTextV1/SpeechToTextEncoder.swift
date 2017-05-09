@@ -16,8 +16,6 @@
 
 import Foundation
 import AudioToolbox
-import Ogg
-import Opus
 
 public class SpeechToTextEncoder {
     
