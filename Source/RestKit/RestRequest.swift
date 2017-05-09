@@ -20,7 +20,7 @@ public struct RestRequest {
 
     public static let userAgent: String = {
         let sdk = "watson-apis-swift-sdk"
-        let sdkVersion = "0.14.3"
+        let sdkVersion = "0.15.1"
         
         let operatingSystem: String = {
             #if os(iOS)
@@ -303,7 +303,27 @@ public struct RestRequest {
             completionHandler(dataResponse)
         }
     }
-    
+
+    public func responseVoid(
+        responseToError: ((HTTPURLResponse?, Data?) -> Error?)? = nil,
+        completionHandler: @escaping (RestResponse<Void>) -> Void)
+    {
+        response() { data, response, error in
+
+            if let responseToError = responseToError, let error = responseToError(response, data) {
+                let result = Result<Void>.failure(error)
+                let dataResponse = RestResponse(request: self.request, response: response, data: data, result: result)
+                completionHandler(dataResponse)
+                return
+            }
+
+            // execute callback
+            let result = Result<Void>.success()
+            let dataResponse = RestResponse(request: self.request, response: response, data: data, result: result)
+            completionHandler(dataResponse)
+        }
+    }
+
     public func download(to destination: URL, completionHandler: @escaping (HTTPURLResponse?, Error?) -> Void) {
         let task = session.downloadTask(with: request) { (source, response, error) in
             guard let source = source else {
