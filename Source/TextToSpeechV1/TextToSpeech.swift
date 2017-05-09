@@ -257,8 +257,6 @@ public class TextToSpeech {
                             failure?(error)
                             return
                         }
-                        TextToSpeech.repairWAVHeader(data: &wav)
-                        success(wav)
                     } else if audioFormat == .opus {
                         do {
                             let decodedAudio = try TextToSpeechDecoder(audioData: data)
