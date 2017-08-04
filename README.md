@@ -27,7 +27,6 @@ There are many resources to help you build your first cognitive application with
 * [Custom Service URLs](#custom-service-urls)
 * [Custom Headers](#custom-headers)
 * [Sample Applications](#sample-applications)
-* [Xcode 7 Compatibility](#xcode-7-compatibility)
 * [Objective-C Compatibility](#objective-c-compatibility)
 * [Linux Compatibility](#linux-compatibility)
 * [Contributing](#contributing)
@@ -92,29 +91,17 @@ $ carthage update --platform iOS
 
 Finally, drag-and-drop the built frameworks into your Xcode project and import them as desired.
 
-### App Transport Security
+### Swift Package Manager
 
-App Transport Security was introduced with iOS 9 to enforce secure Internet connections. To securely connect to IBM Watson services, please add the following exception to your application's `Info.plist` file.
+To include the Watson SDK to your projects, add the following to your `Package.swift` file:
 
-```xml
-<key>NSAppTransportSecurity</key>
-<dict>
-    <key>NSExceptionDomains</key>
-    <dict>
-        <key>watsonplatform.net</key>
-        <dict>
-            <key>NSTemporaryExceptionRequiresForwardSecrecy</key>
-            <false/>
-            <key>NSIncludesSubdomains</key>
-            <true/>
-            <key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-            <true/>
-            <key>NSTemporaryExceptionMinimumTLSVersion</key>
-            <string>TLSv1.0</string>
-        </dict>
-    </dict>
-</dict>
+```swift
+dependencies: [
+    .Package(url: "https://github.com/watson-developer-cloud/swift-sdk",
+             majorVersion: 0)
+]
 ```
+To build the project, run `swift build` from the command line.
 
 ## Service Instances
 
@@ -170,14 +157,6 @@ naturalLanguageClassifier.defaultHeaders = ["X-Watson-Learning-Opt-Out": "true"]
 * [Text to Speech](https://github.com/watson-developer-cloud/text-to-speech-swift)
 * [Cognitive Concierge](https://github.com/IBM-MIL/CognitiveConcierge)
 
-## Xcode 7 Compatibility
-
-Unfortunately, the version of Swift used to develop the SDK is not backwards compatible with Xcode 7. We are not committed to maintaining Xcode 7 support but may occasionally publish a v0.7.x release with critical bug fixes.
-
-To continue using the Swift SDK with Xcode 7, we recommend following the v0.7.x release branch with the following change to your Cartfile:
-
-`github "watson-developer-cloud/swift-sdk" ~> 0.7.0`
-
 ## Objective-C Compatibility
 
 Please see [this tutorial](docs/objective-c.md) for more information about consuming the Watson Developer Cloud Swift SDK in an Objective-C application.
@@ -186,16 +165,7 @@ Please see [this tutorial](docs/objective-c.md) for more information about consu
 
 The following services offer basic support in Linux: Conversation, Language Translator, Natural Language Classifier, Personality Insights V3, Tone Analyzer, and Tradeoff Analytics. Please note some services are not yet fully supported such as Alchemy Language, Alchemy Data News, Document Conversion, Text to Speech, Speech to Text, and Visual Recognition.
 
-To include the Watson SDK to your Linux projects, add the following to your `Package.swift` file:
-
-```swift
-dependencies: [
-	.Package(url: "https://github.com/watson-developer-cloud/swift-sdk",
-	         majorVersion: 0)
-]
-```
-
-To build the project, run `swift build` from the command line.
+To include the Watson SDK to your Linux projects, please follow the [Swift Package Manager instructions.](#swift-package-manager)
 
 ## Contributing
 
@@ -332,8 +302,8 @@ conversation.message(withWorkspace: workspaceID, request: request, failure: fail
 
 The following links provide more information about the IBM Conversation service:
 
-* [IBM Watson Conversation - Service Page](http://www.ibm.com/watson/developercloud/conversation.html)
-* [IBM Watson Conversation - Documentation](http://www.ibm.com/watson/developercloud/doc/conversation/overview.shtml)
+* [IBM Watson Conversation - Service Page](https://www.ibm.com/watson/services/conversation/)
+* [IBM Watson Conversation - Documentation](https://console.bluemix.net/docs/services/conversation/index.html#about)
 
 ## Discovery
 
@@ -772,12 +742,11 @@ The `SpeechToText` class is the SDK's primary interface for performing speech re
 
 The `RecognitionSettings` class is used to define the audio format and behavior of a recognition request. These settings are transmitted to the service when [initating a request](https://www.ibm.com/watson/developercloud/doc/speech-to-text/websockets.shtml#WSstart).
 
-The following example demonstrates how to define a recognition request that transcribes Opus-formatted audio data with interim results until the stream terminates:
+The following example demonstrates how to define a recognition request that transcribes WAV audio data with interim results:
 
 ```swift
 var settings = RecognitionSettings(contentType: .wav)
 settings.interimResults = true
-settings.continuous = true
 ```
 
 See the [class documentation](http://watson-developer-cloud.github.io/ios-sdk/services/SpeechToTextV1/Structs/RecognitionSettings.html) or [service documentation](https://www.ibm.com/watson/developercloud/doc/speech-to-text/details.shtml) for more information about the available settings.
@@ -786,19 +755,19 @@ See the [class documentation](http://watson-developer-cloud.github.io/ios-sdk/se
 
 The Speech to Text framework makes it easy to perform speech recognition with microphone audio. The framework internally manages the microphone, starting and stopping it with various function calls (such as `recognizeMicrophone(settings:model:customizationID:learningOptOut:compress:failure:success)` and `stopRecognizeMicrophone()` or `startMicrophone(compress:)` and `stopMicrophone()`).
 
-Knowing when to stop the microphone depends upon the recognition request's `continuous` setting:
-     
-- If `false`, then the service ends the recognition request at the first end-of-speech incident (denoted by a half-second of non-speech or when the stream terminates). This will coincide with a `final` transcription result. So the `success` or `onResults` callback should be configured to stop the microphone when a final transcription result is received.
+There are two different ways that your app can determine when to stop the microphone:
 
-- If `true`, then the microphone will typically be stopped by user-feedback. For example, your application may have a button to start/stop the request, or you may stream the microphone for the duration of a long press on a UI element.
+- User Interaction: Your app could rely on user input to stop the microphone. For example, you could use a button to start/stop transcribing, or you could require users to press-and-hold a button to start/stop transcribing.
 
-To reduce latency and bandwidth, the microphone audio is compressed to Opus format by default. To disable compression, set the `compress` parameter to `false`.
+- Final Result: Each transcription result has a `final` property that is `true` when the audio stream is complete or a timeout has occurred. By watching for the `final` property, your app can stop the microphone after determining when the user has finished speaking.
+
+To reduce latency and bandwidth, the microphone audio is compressed to OggOpus format by default. To disable compression, set the `compress` parameter to `false`.
 
 It's important to specify the correct audio format for recognition requests that use the microphone:
 
 ```swift
-// compressed microphone audio uses the Opus format
-let settings = RecognitionSettings(contentType: .opus)
+// compressed microphone audio uses the OggOpus format
+let settings = RecognitionSettings(contentType: .oggOpus)
 
 // uncompressed microphone audio uses a 16-bit mono PCM format at 16 kHz
 let settings = RecognitionSettings(contentType: .l16(rate: 16000, channels: 1))
@@ -837,8 +806,7 @@ let password = "your-password-here"
 let speechToText = SpeechToText(username: username, password: password)
 
 func startStreaming() {
-    var settings = RecognitionSettings(contentType: .opus)
-    settings.continuous = true
+    var settings = RecognitionSettings(contentType: .oggOpus)
     settings.interimResults = true
     let failure = { (error: Error) in print(error) }
     speechToText.recognizeMicrophone(settings: settings, failure: failure) { results in
@@ -860,7 +828,7 @@ The following steps describe how to execute a recognition request with `SpeechTo
 1. Connect: Invoke `connect()` to connect to the service.
 2. Start Recognition Request: Invoke `startRequest(settings:)` to start a recognition request.
 3. Send Audio: Invoke `recognize(audio:)` or `startMicrophone(compress:)`/`stopMicrophone()` to send audio to the service.
-4. Stop Recognition Request: Invoke `stopRequest()` to end the recognition request. The service will automatically stop the request if the `continuous` setting is not set to `true`. If the recognition request is already stopped, then sending a stop message will have no effect.
+4. Stop Recognition Request: Invoke `stopRequest()` to end the recognition request. If the recognition request is already stopped, then sending a stop message will have no effect.
 5. Disconnect: Invoke `disconnect()` to wait for any remaining results to be received and then disconnect from the service.
 
 All text and data messages sent by `SpeechToTextSession` are queued, with the exception of `connect()` which immediately connects to the server. The queue ensures that the messages are sent in-order and also buffers messages while waiting for a connection to be established. This behavior is generally transparent.
@@ -868,7 +836,7 @@ All text and data messages sent by `SpeechToTextSession` are queued, with the ex
 A `SpeechToTextSession` also provides several (optional) callbacks. The callbacks can be used to learn about the state of the session or access microphone data.
 
 - `onConnect`: Invoked when the session connects to the Speech to Text service.
-- `onMicrophoneData`: Invoked with microphone audio when a recording audio queue buffer has been filled. If microphone audio is being compressed, then the audio data is in Opus format. If uncompressed, then the audio data is in 16-bit PCM format at 16 kHz.
+- `onMicrophoneData`: Invoked with microphone audio when a recording audio queue buffer has been filled. If microphone audio is being compressed, then the audio data is in OggOpus format. If uncompressed, then the audio data is in 16-bit PCM format at 16 kHz.
 - `onPowerData`: Invoked every 0.025s when recording with the average dB power of the microphone.
 - `onResults`: Invoked when transcription results are received for a recognition request.
 - `onError`: Invoked when an error or warning occurs.
@@ -901,9 +869,8 @@ func startStreaming() {
     speechToTextSession.onResults = { results in print(results.bestTranscript) }
 
     // define recognition request settings
-    var settings = RecognitionSettings(contentType: .opus)
+    var settings = RecognitionSettings(contentType: .oggOpus)
     settings.interimResults = true
-    settings.continuous = true
 
     // start streaming microphone audio for transcription
     speechToTextSession.connect()
