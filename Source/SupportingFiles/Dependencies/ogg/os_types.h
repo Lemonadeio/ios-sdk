@@ -67,7 +67,11 @@
    typedef SInt64 ogg_int64_t;
 
 #elif (defined(__APPLE__) && defined(__MACH__)) /* MacOS X Framework build */
-
+#include <sys/_types/_int16_t.h>
+#include <_types/_uint16_t.h>
+#include <sys/_types/_int32_t.h>
+#include <_types/_uint32_t.h>
+#include <sys/_types/_int64_t.h>
 // #  include <inttypes.h>
    typedef int16_t ogg_int16_t;
    typedef uint16_t ogg_uint16_t;
